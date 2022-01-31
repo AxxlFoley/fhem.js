@@ -33,19 +33,18 @@ version.installed = require('./package').version;
 version.latest = false;
 var server;
 var reconnectTimeout;
-var checkVersionInterval = 12; // in hours
 var fhemSocket;
-var tagsFilterOut;
 var initCompleteCount = 0;
 var initCompleteMax = 2;
+var readdb = require('./readdb');
 
 // -------------------------------------------------------------------
 // setup http(s) server
 // -------------------------------------------------------------------
 
 if (params.useSSL) {
-    var https = require('https');
-    var options = {
+    const https = require('https');
+    const options = {
         key: fs.readFileSync(params.sslcert.key),
         cert: fs.readFileSync(params.sslcert.cert),
         ciphers: params.cipher,
@@ -69,7 +68,7 @@ if (params.pathHTML) {
         var htppFile = params.pathHTML + path;
 
         try {
-            var HTML = fs.readFileSync(htppFile);
+            var HTML = fs.readFileSync(htppFile).toString();
             response.writeHead(200, { 'Content-Type': 'text/html' });
             response.write(HTML);
             response.end();
@@ -252,7 +251,7 @@ var defListeners = function(socket) {
         // establish telnet connection to fhem server
         mylog("request for sync command", 1);
         var fhemcmd = net.connect({ port: params.fhemPort, host: params.fhemHost }, function() {
-            fhemcmd.write(cmd + ';exit\r\n');
+            fhemcmd.write(new Buffer(cmd + ';exit\r\n'));
         });
 
         var answerStr = '';
@@ -300,7 +299,7 @@ var defListeners = function(socket) {
             // establish telnet connection to fhem server
             mylog("request for JsonList2", 1);
             var fhemcmd = net.connect({ port: params.fhemPort, host: params.fhemHost }, function() {
-                fhemcmd.write('JsonList2 ' + args + ';exit\r\n');
+                fhemcmd.write(new Buffer('JsonList2 ' + args + ';exit\r\n'));
             });
 
             var answerStr = '';
@@ -326,13 +325,13 @@ var defListeners = function(socket) {
     socket.on('commandNoResp', function(data) {
         mylog("commandNoResp " + data, 1);
         if (typeof(fhemSocket) != 'undefined' && !fhemSocket.destroyed && fhemSocket.writable) {
-            fhemSocket.write(data + '\r\n');
+            fhemSocket.write(new Buffer(data + '\r\n');
         }
     });
 
     socket.on('disconnect', function(data) {
         mylog('disconnected: ' + data, 1);
-        for (room in socket.rooms) {
+        for (var room in socket.rooms) {
             mylog("leave " + room, 1);
             socket.leave(room);
         }
@@ -350,7 +349,7 @@ process.on('uncaughtException', function(err) {
 
 fhemSocket.on('connect', function(data) {
     funcs.mylog('connected to fhem server for listen on changed values', 0);
-    fhemSocket.write('inform on\r\n');
+    fhemSocket.write(new Buffer('inform on\r\n'));
     ios.sockets.emit('fhemConn');
 });
 
@@ -386,6 +385,7 @@ function connectFHEMserver() {
     fhemSocket.connect({ port: params.fhemPort, host: params.fhemHost });
 }
 
+
 // -------------------------------------------------------------------
 // handle client get requests
 // -------------------------------------------------------------------
@@ -393,7 +393,7 @@ function connectFHEMserver() {
 function getAllValues(type) {
     // establish telnet connection to fhem server
     var fhemreq = net.connect({ port: params.fhemPort, host: params.fhemHost }, function() {
-        fhemreq.write('list;exit\r\n');
+        fhemreq.write(new Buffer('list;exit\r\n'));
     });
 
     var answerStr = '';
@@ -491,7 +491,7 @@ function getDevice(device) {
     // establish telnet connection to fhem server
     mylog('get Jsonlist2 for device ' + device, 1);
     var fhemreq = net.connect({ port: params.fhemPort, host: params.fhemHost }, function() {
-        fhemreq.write('JsonList2 ' + device + ';exit\r\n');
+        fhemreq.write(new Buffer('JsonList2 ' + device + ';exit\r\n'));
     });
 
     var answerStr = '';
@@ -535,7 +535,7 @@ function pollDBvalue(dbObj) {
 
 function checkVersion() {
     mylog("checkVersion started", 1);
-    exec('npm view fhem.js version', (error, stdout, stderr) => {
+    exec('npm view fhem.js version', (var error, var stdout, var stderr) => {
         if (error) {
             console.error(`exec error: ${error}`);
             return;
@@ -568,7 +568,6 @@ function init() {
     }, params.pollForAllDevices * 1000);
 
     if (params.readDB) {
-        var readdb = require('./readdb');
         for (var i in params.readDBvalues) {
             var dbObj = params.readDBvalues[i];
             pollDBvalue(dbObj);
