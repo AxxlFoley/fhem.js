@@ -1,5 +1,5 @@
 var changedValues = '';
-var socket = io.connect('ws://your.domain.tld:8086', {
+var socket = io.connect('ws://localhost:8086', {
 	timeout: 5000,
 	'sync disconnect on unload' : true
 });

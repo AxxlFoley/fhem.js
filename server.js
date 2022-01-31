@@ -91,7 +91,11 @@ if (params.pathHTML) {
     });
 }
 
-var ios = io(server);
+var ios = io(server , {
+    cors: {
+      origin: "null"
+    }
+  });
 
 // -------------------------------------------------------------------
 // setup password protection
